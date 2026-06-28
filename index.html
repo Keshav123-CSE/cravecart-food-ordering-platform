@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CraveCart - Food Ordering App</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;font-family:Arial,sans-serif}
+    body{background:#fff8f0;color:#222}
+    header{background:#ff5a1f;color:white;padding:20px 8%;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:10}
+    .logo{font-size:28px;font-weight:bold}
+    nav a{color:white;text-decoration:none;margin-left:25px;font-weight:bold}
+    .hero{padding:70px 8%;display:flex;justify-content:space-between;align-items:center;background:linear-gradient(135deg,#fff1e6,#ffe0cc)}
+    .hero h1{font-size:48px;margin-bottom:15px}
+    .hero p{font-size:18px;margin-bottom:25px;color:#555}
+    .hero button,.btn{background:#ff5a1f;color:white;border:none;padding:12px 22px;border-radius:8px;cursor:pointer;font-weight:bold}
+    .hero img{width:360px;border-radius:20px}
+    section{padding:45px 8%}
+    h2{font-size:32px;margin-bottom:25px}
+    .search{width:100%;padding:15px;border:2px solid #ff5a1f;border-radius:10px;margin-bottom:30px;font-size:16px}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:25px}
+    .card{background:white;border-radius:16px;box-shadow:0 5px 20px #0001;overflow:hidden;transition:.3s}
+    .card:hover{transform:translateY(-6px)}
+    .card img{width:100%;height:160px;object-fit:cover}
+    .card-body{padding:18px}
+    .card h3{margin-bottom:8px}
+    .rating{color:#0a8f08;font-weight:bold}
+    .price{font-weight:bold;margin:10px 0}
+    .cart{background:#222;color:white;padding:30px;border-radius:16px}
+    .cart-item{display:flex;justify-content:space-between;margin:12px 0;border-bottom:1px solid #555;padding-bottom:8px}
+    .assistant{background:#fff;border-radius:16px;padding:25px;box-shadow:0 5px 20px #0001}
+    .assistant input{width:100%;padding:14px;margin:15px 0;border:1px solid #ccc;border-radius:8px}
+    footer{text-align:center;padding:25px;background:#222;color:white;margin-top:40px}
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">🍔 CraveCart</div>
+  <nav>
+    <a href="#restaurants">Restaurants</a>
+    <a href="#assistant">AI Assistant</a>
+    <a href="#cart">Cart</a>
+  </nav>
+</header>
+
+<div class="hero">
+  <div>
+    <h1>Order Food Faster & Smarter</h1>
+    <p>A Swiggy-inspired food ordering platform with smart food suggestions.</p>
+    <button onclick="document.getElementById('restaurants').scrollIntoView()">Order Now</button>
+  </div>
+  <img src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=800&q=80">
+</div>
+
+<section id="restaurants">
+  <h2>Popular Restaurants</h2>
+  <input class="search" id="search" placeholder="Search restaurant or food..." onkeyup="renderRestaurants()">
+  <div class="grid" id="restaurantGrid"></div>
+</section>
+
+<section>
+  <h2>Featured Dishes</h2>
+  <div class="grid" id="foodGrid"></div>
+</section>
+
+<section id="assistant">
+  <h2>AI Food Assistant</h2>
+  <div class="assistant">
+    <p>Tell us your mood or budget. Example: "spicy under 250", "veg under 200", "quick food"</p>
+    <input id="aiInput" placeholder="What do you want to eat?">
+    <button class="btn" onclick="suggestFood()">Suggest Food</button>
+    <h3 style="margin-top:20px">Suggestions:</h3>
+    <p id="suggestion">Your suggestions will appear here.</p>
+  </div>
+</section>
+
+<section id="cart">
+  <h2>Your Cart</h2>
+  <div class="cart">
+    <div id="cartItems">Cart is empty.</div>
+    <h3 id="total">Total: ₹0</h3>
+    <button class="btn" onclick="placeOrder()">Place Order</button>
+  </div>
+</section>
+
+<footer>
+  <p>Made by Keshav Agrawal | CraveCart Food Ordering Platform</p>
+</footer>
+
+<script>
+const restaurants = [
+  {name:"Spice Hub", cuisine:"North Indian", rating:"4.5", time:"25 min", img:"https://images.unsplash.com/photo-1585937421612-70a008356fbe?auto=format&fit=crop&w=800&q=80"},
+  {name:"Pizza Palace", cuisine:"Italian", rating:"4.3", time:"30 min", img:"https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=800&q=80"},
+  {name:"Burger Town", cuisine:"Fast Food", rating:"4.4", time:"20 min", img:"https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=800&q=80"},
+  {name:"Biryani House", cuisine:"Indian", rating:"4.6", time:"35 min", img:"https://images.unsplash.com/photo-1563379091339-03246963d96c?auto=format&fit=crop&w=800&q=80"}
+];
+
+const foods = [
+  {name:"Paneer Tikka", price:220, type:"veg", spice:"spicy", time:"25 min", img:"https://images.unsplash.com/photo-1601050690597-df0568f70950?auto=format&fit=crop&w=800&q=80"},
+  {name:"Veg Burger", price:120, type:"veg", spice:"mild", time:"15 min", img:"https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=800&q=80"},
+  {name:"Chicken Biryani", price:280, type:"nonveg", spice:"spicy", time:"30 min", img:"https://images.unsplash.com/photo-1563379091339-03246963d96c?auto=format&fit=crop&w=800&q=80"},
+  {name:"Cheese Pizza", price:250, type:"veg", spice:"mild", time:"25 min", img:"https://images.unsplash.com/photo-1604382354936-07c5d9983bd3?auto=format&fit=crop&w=800&q=80"},
+  {name:"Masala Dosa", price:150, type:"veg", spice:"medium", time:"18 min", img:"https://images.unsplash.com/photo-1668236543090-82eba5ee5976?auto=format&fit=crop&w=800&q=80"},
+  {name:"Chilli Potato", price:180, type:"veg", spice:"spicy", time:"20 min", img:"https://images.unsplash.com/photo-1630383249896-424e482df921?auto=format&fit=crop&w=800&q=80"}
+];
+
+let cart = [];
+
+function renderRestaurants(){
+  const q = document.getElementById("search").value.toLowerCase();
+  const grid = document.getElementById("restaurantGrid");
+  grid.innerHTML = "";
+
+  restaurants
+    .filter(r => r.name.toLowerCase().includes(q) || r.cuisine.toLowerCase().includes(q))
+    .forEach(r => {
+      grid.innerHTML += `
+        <div class="card">
+          <img src="${r.img}">
+          <div class="card-body">
+            <h3>${r.name}</h3>
+            <p>${r.cuisine}</p>
+            <p><span class="rating">★ ${r.rating}</span> • ${r.time}</p>
+          </div>
+        </div>
+      `;
+    });
+}
+
+function renderFoods(){
+  const grid = document.getElementById("foodGrid");
+  grid.innerHTML = "";
+  foods.forEach((f,i)=>{
+    grid.innerHTML += `
+      <div class="card">
+        <img src="${f.img}">
+        <div class="card-body">
+          <h3>${f.name}</h3>
+          <p>${f.type.toUpperCase()} • ${f.spice}</p>
+          <p class="price">₹${f.price}</p>
+          <button class="btn" onclick="addToCart(${i})">Add to Cart</button>
+        </div>
+      </div>
+    `;
+  });
+}
+
+function addToCart(index){
+  cart.push(foods[index]);
+  renderCart();
+}
+
+function renderCart(){
+  const cartItems = document.getElementById("cartItems");
+  const totalBox = document.getElementById("total");
+
+  if(cart.length === 0){
+    cartItems.innerHTML = "Cart is empty.";
+    totalBox.innerHTML = "Total: ₹0";
+    return;
+  }
+
+  let total = 0;
+  cartItems.innerHTML = "";
+  cart.forEach((item,i)=>{
+    total += item.price;
+    cartItems.innerHTML += `
+      <div class="cart-item">
+        <span>${item.name} - ₹${item.price}</span>
+        <button onclick="removeItem(${i})">Remove</button>
+      </div>
+    `;
+  });
+
+  totalBox.innerHTML = "Total: ₹" + total;
+}
+
+function removeItem(i){
+  cart.splice(i,1);
+  renderCart();
+}
+
+function placeOrder(){
+  if(cart.length === 0){
+    alert("Cart is empty!");
+    return;
+  }
+  alert("Order placed successfully!");
+  cart = [];
+  renderCart();
+}
+
+function suggestFood(){
+  const input = document.getElementById("aiInput").value.toLowerCase();
+  let result = foods;
+
+  if(input.includes("veg")) result = result.filter(f => f.type === "veg");
+  if(input.includes("spicy")) result = result.filter(f => f.spice === "spicy");
+  if(input.includes("quick")) result = result.filter(f => parseInt(f.time) <= 20);
+
+  const priceMatch = input.match(/\d+/);
+  if(priceMatch){
+    const budget = parseInt(priceMatch[0]);
+    result = result.filter(f => f.price <= budget);
+  }
+
+  document.getElementById("suggestion").innerHTML =
+    result.length ? result.map(f => `🍽️ ${f.name} - ₹${f.price}`).join("<br>") : "No matching food found.";
+}
+
+renderRestaurants();
+renderFoods();
+renderCart();
+</script>
+
+</body>
+</html>
